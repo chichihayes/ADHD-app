@@ -1,4 +1,4 @@
-# ADHD Learning Buddy
+# ADHD Learning Companion
 
 A structured AI-powered learning system built with Streamlit that guides users through progressive understanding of concepts using explanation, feedback, questioning, and adaptive teaching cycles.
 
