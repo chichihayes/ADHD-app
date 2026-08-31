@@ -172,23 +172,23 @@ export default function Page() {
     <main className="mx-auto max-w-2xl px-4 py-8">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold">📚 Learning Companion</h1>
-          <p className="mt-1 text-gray-600">
+          <h1 className="text-3xl font-bold text-white">📚 Learning Companion</h1>
+          <p className="mt-1 text-blue-200">
             Ask questions and deepen your understanding through structured explanations.
           </p>
         </div>
         <button
           onClick={resetSession}
-          className="shrink-0 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+          className="shrink-0 rounded-lg border border-white/20 bg-white/5 px-3 py-1.5 text-sm text-blue-100 hover:bg-white/10"
         >
           Reset Session
         </button>
       </div>
 
-      <hr className="my-6 border-gray-300" />
+      <hr className="my-6 border-white/10" />
 
       {messages.length === 0 ? (
-        <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-blue-900">
+        <div className="rounded-xl border border-blue-800/60 bg-blue-950/40 p-4 text-blue-100">
           Submit a question to begin your learning session.
           <br />
           <br />
@@ -215,12 +215,12 @@ export default function Page() {
                     {msg.text}
                   </div>
                 ) : (
-                  <div className="float-left max-w-[70%] rounded-2xl bg-gray-100 px-4 py-3 text-gray-800">
+                  <div className="float-left max-w-[70%] rounded-2xl bg-slate-800 px-4 py-3 text-slate-100">
                     {msg.text}
                   </div>
                 ))}
               {msg.type === "system" && (
-                <div className="mx-auto w-fit rounded-full bg-emerald-100 px-6 py-3 text-center font-semibold text-emerald-800">
+                <div className="mx-auto w-fit rounded-full bg-emerald-900/60 px-6 py-3 text-center font-semibold text-emerald-200">
                   {msg.text}
                 </div>
               )}
@@ -229,7 +229,7 @@ export default function Page() {
           ))}
           {loading && (
             <div className="clear-both">
-              <div className="float-left max-w-[70%] rounded-2xl bg-gray-100 px-4 py-3 text-gray-500 italic">
+              <div className="float-left max-w-[70%] rounded-2xl bg-slate-800 px-4 py-3 text-slate-400 italic">
                 Thinking…
               </div>
               <div className="clear-both" />
@@ -238,11 +238,11 @@ export default function Page() {
         </div>
       )}
 
-      <hr className="my-6 border-gray-300" />
+      <hr className="my-6 border-white/10" />
 
       {showInput && (
         <div>
-          <h3 className="mb-2 font-semibold">{label}</h3>
+          <h3 className="mb-2 font-semibold text-white">{label}</h3>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -257,7 +257,7 @@ export default function Page() {
                 placeholder={placeholder}
                 rows={4}
                 disabled={loading}
-                className="w-full rounded-xl border border-gray-300 p-3 focus:border-purple-400 focus:outline-none disabled:bg-gray-50"
+                className="w-full rounded-xl border border-white/20 bg-white/5 p-3 text-white placeholder-slate-400 focus:border-purple-400 focus:outline-none disabled:bg-white/[0.02]"
               />
             ) : (
               <input
@@ -265,7 +265,7 @@ export default function Page() {
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={placeholder}
                 disabled={loading}
-                className="w-full rounded-xl border border-gray-300 p-3 focus:border-purple-400 focus:outline-none disabled:bg-gray-50"
+                className="w-full rounded-xl border border-white/20 bg-white/5 p-3 text-white placeholder-slate-400 focus:border-purple-400 focus:outline-none disabled:bg-white/[0.02]"
               />
             )}
             <button
@@ -279,7 +279,7 @@ export default function Page() {
         </div>
       )}
 
-      <div className="mt-6 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+      <div className="mt-6 rounded-xl border border-blue-800/60 bg-blue-950/40 p-4 text-sm text-blue-100">
         💡 <strong>Note:</strong> Take time to fully understand each concept before moving
         forward. If something is unclear, ask for clarification.
       </div>
