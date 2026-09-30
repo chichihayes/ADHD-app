@@ -33,6 +33,25 @@ async function callAI(systemPrompt: string, userPrompt: string, history: History
   return { text: data.response as string, error: false };
 }
 
+function TypedText({ text, onType }: { text: string; onType?: () => void }) {
+  const [shown, setShown] = useState("");
+
+  useEffect(() => {
+    setShown("");
+    let i = 0;
+    const id = setInterval(() => {
+      i += 2;
+      setShown(text.slice(0, i));
+      onType?.();
+      if (i >= text.length) clearInterval(id);
+    }, 15);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text]);
+
+  return <>{shown}</>;
+}
+
 export default function Page() {
   const [tab, setTab] = useState<Tab>("about");
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -203,11 +222,10 @@ export default function Page() {
         {tab === "about" && (
           <div className="mx-auto max-w-2xl px-5 py-10">
             <p className="font-mono text-xs uppercase tracking-widest text-purple-300">Structured AI tutoring</p>
-            <h1 className="mt-2 text-3xl font-bold text-white">A learning companion that won&apos;t let you skim</h1>
+            <h1 className="mt-2 text-3xl font-bold text-white">Bring the hard stuff, get the simple version</h1>
             <p className="mt-3 text-blue-200">
-              Instead of answering once and moving on, this app runs a fixed five-step teaching
-              cycle around whatever you ask about — it checks you actually understood before
-              going further.
+              Ask about anything, no matter how complicated. This app breaks it down
+              step by step until it's small and simple enough to actually stick.
             </p>
 
             <ol className="mt-8 space-y-4">
@@ -215,7 +233,7 @@ export default function Page() {
                 ["Ask", "You submit a concept or question you want explained."],
                 ["Explain", "A structured, academic-level explanation — not a one-liner."],
                 ["Reflect", "You say what you understood; gaps get identified and corrected, directly."],
-                ["Personalize", "The concept gets retold as one coherent story built around something you're actually interested in."],
+                ["Personalize", "Like football? We'll explain it using football."],
                 ["Test & expand", "A technical question checks real understanding, then the next, deeper stage of the same topic begins — and the cycle repeats."],
               ].map(([title, desc], i) => (
                 <li key={title} className="flex gap-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
@@ -301,10 +319,26 @@ export default function Page() {
                       </div>
                       {e.special ? (
                         <div className="rounded-xl border-2 border-amber-400/60 bg-gradient-to-r from-amber-400/10 to-orange-400/10 p-4 leading-relaxed text-amber-100">
-                          {e.text}
+                          {e.role === "ai" ? (
+                            <TypedText
+                              text={e.text}
+                              onType={() => transcriptRef.current?.scrollTo({ top: transcriptRef.current.scrollHeight })}
+                            />
+                          ) : (
+                            e.text
+                          )}
                         </div>
                       ) : (
-                        <div className="leading-relaxed text-slate-100">{e.text}</div>
+                        <div className="leading-relaxed text-slate-100">
+                          {e.role === "ai" ? (
+                            <TypedText
+                              text={e.text}
+                              onType={() => transcriptRef.current?.scrollTo({ top: transcriptRef.current.scrollHeight })}
+                            />
+                          ) : (
+                            e.text
+                          )}
+                        </div>
                       )}
                     </div>
                   ))}
