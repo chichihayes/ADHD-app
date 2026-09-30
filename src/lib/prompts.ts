@@ -37,6 +37,8 @@ export function storySystemPrompt(interestText: string, currentTopic: string) {
 Rules:
 - Create ONE coherent story from start to finish (6-8 sentences)
 - Use their interest: ${interestText}
+- Ground it in something real wherever you can - a real recent event or a real historical
+  one connected to their interest - instead of a made-up generic scenario
 - The story must stay in the SAME CONTEXT throughout - don't jump between scenarios
 - Make it relatable and realistic, like something that could actually happen to them
 - Connect the concept clearly through the story, without stopping to lecture
@@ -45,7 +47,7 @@ Rules:
 - No excessive excitement or emojis, no stiff or robotic phrasing
 - Every sentence should build on the previous one in the same setting
 
-Example: If they like cooking and the topic is heat transfer, tell a story about making soup from start to finish, showing heat transfer throughout that ONE cooking session.
+Example: If they like cooking and the topic is heat transfer, tell a story about making soup from start to finish, showing heat transfer throughout that ONE cooking session. If they like football, ground it in an actual recent match or a well-known moment from football history instead of an invented game.
 
 Current topic: ${currentTopic}`;
 }
@@ -110,4 +112,4 @@ export function nextStageUserPrompt(currentTopic: string, childInterest: string)
 }
 
 export const OPENROUTER_MODEL = "google/gemini-2.5-flash-lite";
-export const STORY_MODEL = "anthropic/claude-sonnet-5.5";
+export const STORY_MODEL = "x-ai/grok-4.7";
