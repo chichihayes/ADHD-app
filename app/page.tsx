@@ -13,6 +13,7 @@ import {
   answerEvalUserPrompt,
   nextStageSystemPrompt,
   nextStageUserPrompt,
+  STORY_MODEL,
 } from "@/src/lib/prompts";
 
 type Entry = { role: "user" | "ai"; label: string; text: string; special?: boolean; pending?: boolean; error?: boolean };
@@ -20,11 +21,11 @@ type HistoryMsg = { role: "user" | "assistant"; content: string };
 type Stage = "question" | "feedback" | "interest" | "questionPhase" | "answer";
 type Tab = "about" | "learn" | "visualize";
 
-async function callAI(systemPrompt: string, userPrompt: string, history: HistoryMsg[]) {
+async function callAI(systemPrompt: string, userPrompt: string, history: HistoryMsg[], model?: string) {
   const res = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ systemPrompt, userPrompt, history }),
+    body: JSON.stringify({ systemPrompt, userPrompt, history, model }),
   });
   const data = await res.json();
   if (!res.ok) {
@@ -99,7 +100,7 @@ export default function Page() {
     setLoading(true);
     const sys = storySystemPrompt(interestText, currentTopic);
     const prompt = storyUserPrompt(currentTopic, interestText);
-    const { text: aiStory } = await callAI(sys, prompt, history);
+    const { text: aiStory } = await callAI(sys, prompt, history, STORY_MODEL);
     pushHistory(prompt, aiStory);
     push({ role: "ai", label: "In context", text: aiStory, special: true });
     setLoading(false);

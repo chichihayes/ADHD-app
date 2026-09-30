@@ -14,14 +14,14 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let body: { systemPrompt?: string; userPrompt?: string; history?: ChatMessage[] };
+  let body: { systemPrompt?: string; userPrompt?: string; history?: ChatMessage[]; model?: string };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
-  const { systemPrompt, userPrompt, history = [] } = body;
+  const { systemPrompt, userPrompt, history = [], model } = body;
   if (!systemPrompt || !userPrompt) {
     return NextResponse.json(
       { error: "systemPrompt and userPrompt are required." },
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
         "HTTP-Referer": "https://adhd-learning-companion.vercel.app",
         "X-Title": "ADHD Learning Companion",
       },
-      body: JSON.stringify({ model: OPENROUTER_MODEL, messages }),
+      body: JSON.stringify({ model: model || OPENROUTER_MODEL, messages }),
     });
 
     const data = await upstream.json();

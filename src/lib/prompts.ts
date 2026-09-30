@@ -110,3 +110,4 @@ export function nextStageUserPrompt(currentTopic: string, childInterest: string)
 }
 
 export const OPENROUTER_MODEL = "google/gemini-2.5-flash-lite";
+export const STORY_MODEL = "anthropic/claude-sonnet-5.5";
