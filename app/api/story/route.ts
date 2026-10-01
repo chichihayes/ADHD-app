@@ -4,7 +4,7 @@ import { STORY_PANEL_MODELS } from "@/src/lib/prompts";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const MAX_ROUNDS = 3;
+const MAX_ROUNDS = 1;
 
 async function callModel(apiKey: string, model: string, systemPrompt: string, userPrompt: string) {
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
