@@ -43,7 +43,9 @@ Rules:
 - Make it relatable and realistic, like something that could actually happen to them
 - Connect the concept clearly through the story, without stopping to lecture
 - Keep it simple and small - plain words, one clear moment leading into the next
-- Each sentence should leave the reader wanting to know what happens next
+- Each sentence should leave the reader wanting to know what happens next, all the way
+  to the last line - it needs to hold up to the very end, not just open strong
+- End on the moment that actually resolves the story, not a summary or a moral
 - No excessive excitement or emojis, no stiff or robotic phrasing
 - Every sentence should build on the previous one in the same setting
 
@@ -113,3 +115,7 @@ export function nextStageUserPrompt(currentTopic: string, childInterest: string)
 
 export const OPENROUTER_MODEL = "google/gemini-2.5-flash-lite";
 export const STORY_MODEL = "x-ai/grok-4.7";
+export const STORY_PANEL_MODELS = {
+  writer: "x-ai/grok-4.7",
+  critics: ["anthropic/claude-sonnet-5.5", "openai/gpt-6.1-sol-pro", "google/gemini-3.8-flash"],
+};

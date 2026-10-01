@@ -13,7 +13,6 @@ import {
   answerEvalUserPrompt,
   nextStageSystemPrompt,
   nextStageUserPrompt,
-  STORY_MODEL,
 } from "@/src/lib/prompts";
 
 type Entry = { role: "user" | "ai"; label: string; text: string; special?: boolean; pending?: boolean; error?: boolean };
@@ -30,6 +29,19 @@ async function callAI(systemPrompt: string, userPrompt: string, history: History
   const data = await res.json();
   if (!res.ok) {
     return { text: `Oops! I'm having trouble thinking right now. Can you try again? 🤔 (Error: ${data.error || res.status})`, error: true };
+  }
+  return { text: data.response as string, error: false };
+}
+
+async function callStoryPanel(systemPrompt: string, userPrompt: string) {
+  const res = await fetch("/api/story", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ systemPrompt, userPrompt }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    return { text: `Oops! The panel couldn't agree. Can you try again? 🤔 (Error: ${data.error || res.status})`, error: true };
   }
   return { text: data.response as string, error: false };
 }
@@ -61,6 +73,7 @@ export default function Page() {
   const [currentTopic, setCurrentTopic] = useState("");
   const [childInterest, setChildInterest] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingLabel, setLoadingLabel] = useState("Thinking…");
   const [input, setInput] = useState("");
   const questionPhaseFired = useRef(false);
   const transcriptRef = useRef<HTMLDivElement>(null);
@@ -98,12 +111,14 @@ export default function Page() {
     push({ role: "user", label: "Your interest", text: interestText });
     setChildInterest(interestText);
     setLoading(true);
+    setLoadingLabel("The panel is debating the story…");
     const sys = storySystemPrompt(interestText, currentTopic);
     const prompt = storyUserPrompt(currentTopic, interestText);
-    const { text: aiStory } = await callAI(sys, prompt, history, STORY_MODEL);
+    const { text: aiStory } = await callStoryPanel(sys, prompt);
     pushHistory(prompt, aiStory);
     push({ role: "ai", label: "In context", text: aiStory, special: true });
     setLoading(false);
+    setLoadingLabel("Thinking…");
     setStage("questionPhase");
   }
 
@@ -346,7 +361,7 @@ export default function Page() {
                   {loading && (
                     <div className="grid grid-cols-[100px_1fr] gap-4 py-5 sm:grid-cols-[130px_1fr]">
                       <div className="font-mono text-[11px] uppercase tracking-wide text-blue-300">…</div>
-                      <div className="italic text-blue-300/70">Thinking…</div>
+                      <div className="italic text-blue-300/70">{loadingLabel}</div>
                     </div>
                   )}
                 </div>
