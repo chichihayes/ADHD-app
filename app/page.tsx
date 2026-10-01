@@ -33,15 +33,15 @@ async function callAI(systemPrompt: string, userPrompt: string, history: History
   return { text: data.response as string, error: false };
 }
 
-async function callStoryPanel(systemPrompt: string, userPrompt: string) {
+async function callStoryPanel(systemPrompt: string, userPrompt: string, currentTopic: string, interestText: string) {
   const res = await fetch("/api/story", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ systemPrompt, userPrompt }),
+    body: JSON.stringify({ systemPrompt, userPrompt, currentTopic, interestText }),
   });
   const data = await res.json();
   if (!res.ok) {
-    return { text: `Oops! The panel couldn't agree. Can you try again? 🤔 (Error: ${data.error || res.status})`, error: true };
+    return { text: `Oops! The writers couldn't get it together. Can you try again? 🤔 (Error: ${data.error || res.status})`, error: true };
   }
   return { text: data.response as string, error: false };
 }
@@ -111,10 +111,10 @@ export default function Page() {
     push({ role: "user", label: "Your interest", text: interestText });
     setChildInterest(interestText);
     setLoading(true);
-    setLoadingLabel("The panel is debating the story…");
+    setLoadingLabel("Four writers are drafting, then one is picking the best…");
     const sys = storySystemPrompt(interestText, currentTopic);
     const prompt = storyUserPrompt(currentTopic, interestText);
-    const { text: aiStory } = await callStoryPanel(sys, prompt);
+    const { text: aiStory } = await callStoryPanel(sys, prompt, currentTopic, interestText);
     pushHistory(prompt, aiStory);
     push({ role: "ai", label: "In context", text: aiStory, special: true });
     setLoading(false);

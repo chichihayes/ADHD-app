@@ -116,6 +116,31 @@ export function nextStageUserPrompt(currentTopic: string, childInterest: string)
 export const OPENROUTER_MODEL = "google/gemini-2.5-flash-lite";
 export const STORY_MODEL = "x-ai/grok-4.7";
 export const STORY_PANEL_MODELS = {
-  writer: "x-ai/grok-4.7",
-  critics: ["anthropic/claude-haiku-4.5", "openai/gpt-6.1-sol", "google/gemini-3.8-flash"],
+  writers: ["x-ai/grok-4.7", "anthropic/claude-haiku-4.5", "openai/gpt-6.1-sol", "google/gemini-3.8-flash"],
+  master: "anthropic/claude-sonnet-5.5",
 };
+
+export function masterStorySystemPrompt(storyRules: string) {
+  return `Four different writers each independently wrote their own attempt at the same story. You are the one voice who picks what's best in each and writes the single final version - not a patchwork of their sentences, a real story in your own voice that happens to be informed by all four.
+
+The story has to follow these rules:
+${storyRules}
+
+Your job specifically:
+- Read all four attempts and notice what actually works in each - a strong opening, a real detail, a moment that lands, a clean connection to the concept
+- Throw out anything that reads stiff, robotic, generic, or like a lesson wearing a story costume
+- Write ONE final story in plain, human language - something a person would actually want to read to the last line because they're curious what happens, not because they have to
+- It must end on the moment that resolves the story, not a summary or a moral
+- Do not mention the four drafts, the writers, or that this was assembled from anything - just output the final story itself, nothing else`;
+}
+
+export function masterStoryUserPrompt(currentTopic: string, interestText: string, drafts: string[]) {
+  const labeled = drafts.map((d, i) => `Attempt ${i + 1}:\n"""\n${d}\n"""`).join("\n\n");
+  return `Topic: "${currentTopic}". Interest to build the story around: "${interestText}".
+
+Here are the four independent attempts:
+
+${labeled}
+
+Write the single best final story now.`;
+}
