@@ -5,34 +5,55 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 const MAX_ROUNDS = 1;
+const WRITER_TIMEOUT_MS = 20000;
+const CRITIC_TIMEOUT_MS = 12000;
 
-async function callModel(apiKey: string, model: string, systemPrompt: string, userPrompt: string) {
-  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-      "HTTP-Referer": "https://adhd-learning-companion.vercel.app",
-      "X-Title": "ADHD Learning Companion",
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-    }),
-  });
+async function callModel(
+  apiKey: string,
+  model: string,
+  systemPrompt: string,
+  userPrompt: string,
+  timeoutMs: number
+) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data?.error?.message || `${model} request failed`);
+  try {
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://adhd-learning-companion.vercel.app",
+        "X-Title": "ADHD Learning Companion",
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+      }),
+      signal: controller.signal,
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data?.error?.message || `${model} request failed`);
+    }
+    const text: string | undefined = data?.choices?.[0]?.message?.content;
+    if (!text) {
+      throw new Error(`No response from ${model}`);
+    }
+    return text;
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new Error(`${model} timed out after ${timeoutMs / 1000}s`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
   }
-  const text: string | undefined = data?.choices?.[0]?.message?.content;
-  if (!text) {
-    throw new Error(`No response from ${model}`);
-  }
-  return text;
 }
 
 function critiquePrompt(storyRules: string, draft: string) {
@@ -72,17 +93,25 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    let draft = await callModel(apiKey, STORY_PANEL_MODELS.writer, systemPrompt, userPrompt);
+    let draft = await callModel(apiKey, STORY_PANEL_MODELS.writer, systemPrompt, userPrompt, WRITER_TIMEOUT_MS);
 
     for (let round = 0; round < MAX_ROUNDS; round++) {
-      const verdicts = await Promise.all(
+      const verdicts = await Promise.allSettled(
         STORY_PANEL_MODELS.critics.map((model) =>
-          callModel(apiKey, model, "You are a sharp, honest story editor.", critiquePrompt(systemPrompt, draft))
+          callModel(
+            apiKey,
+            model,
+            "You are a sharp, honest story editor.",
+            critiquePrompt(systemPrompt, draft),
+            CRITIC_TIMEOUT_MS
+          )
         )
       );
 
+      // A critic that times out or errors doesn't get to block the story - treat it as a pass.
       const requestedChanges = verdicts
-        .map((v) => v.trim())
+        .filter((v): v is PromiseFulfilledResult<string> => v.status === "fulfilled")
+        .map((v) => v.value.trim())
         .filter((v) => !/^APPROVE/i.test(v));
 
       if (requestedChanges.length === 0) break;
@@ -99,7 +128,7 @@ ${requestedChanges.map((r) => `- ${r.replace(/^REVISE:\s*/i, "")}`).join("\n")}
 
 Rewrite the story addressing their feedback, while still following all the original rules.`;
 
-      draft = await callModel(apiKey, STORY_PANEL_MODELS.writer, systemPrompt, revisePrompt);
+      draft = await callModel(apiKey, STORY_PANEL_MODELS.writer, systemPrompt, revisePrompt, WRITER_TIMEOUT_MS);
     }
 
     return NextResponse.json({ response: draft });

@@ -117,5 +117,5 @@ export const OPENROUTER_MODEL = "google/gemini-2.5-flash-lite";
 export const STORY_MODEL = "x-ai/grok-4.7";
 export const STORY_PANEL_MODELS = {
   writer: "x-ai/grok-4.7",
-  critics: ["anthropic/claude-sonnet-5.5", "openai/gpt-6.1-sol-pro", "google/gemini-3.8-flash"],
+  critics: ["anthropic/claude-haiku-4.5", "openai/gpt-6.1-sol", "google/gemini-3.8-flash"],
 };
