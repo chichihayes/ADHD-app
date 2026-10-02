@@ -145,7 +145,7 @@ ${labeled}
 Write the single best final story now.`;
 }
 
-export const SCENE_MODEL = "google/gemini-3.8-flash";
+export const SCENE_MODEL = "anthropic/claude-sonnet-5.5";
 
 export const STICK_POSES = ["stand", "point", "wave", "think", "sit", "jump", "cheer", "walk", "run"] as const;
 
