@@ -490,29 +490,35 @@ export default function Page() {
           </div>
         )}
 
-        {/* ===================== VISUALIZE (stick-figure playback) ===================== */}
+        {/* ===================== VISUALIZE (full-screen stick-figure video) ===================== */}
         {tab === "visualize" && (
-          <div className="flex h-full flex-col items-center justify-center gap-4 px-5">
+          <div className="relative h-full w-full">
             {!storyText ? (
-              <div className="relative max-w-md overflow-hidden rounded-2xl border border-dashed border-white/20 bg-white/[0.03] p-10 text-center">
-                <p className="font-mono text-xs uppercase tracking-widest text-purple-300">Nothing yet</p>
-                <h2 className="mt-2 text-2xl font-bold text-white">Visualize</h2>
-                <p className="mt-2 text-blue-200">
-                  Go to Learn and personalize a topic with something you're into — your story
-                  shows up here as a stick-figure video.
-                </p>
+              <div className="flex h-full items-center justify-center px-5">
+                <div className="relative max-w-md overflow-hidden rounded-2xl border border-dashed border-white/20 bg-white/[0.03] p-10 text-center">
+                  <p className="font-mono text-xs uppercase tracking-widest text-purple-300">Nothing yet</p>
+                  <h2 className="mt-2 text-2xl font-bold text-white">Visualize</h2>
+                  <p className="mt-2 text-blue-200">
+                    Go to Learn and personalize a topic with something you're into — your story
+                    shows up here as a stick-figure video.
+                  </p>
+                </div>
               </div>
             ) : sceneStatus === "loading" ? (
-              <p className="italic text-blue-300/70">Turning your story into stick figures…</p>
+              <div className="flex h-full items-center justify-center">
+                <p className="italic text-blue-300/70">Turning your story into stick figures…</p>
+              </div>
             ) : sceneStatus === "error" ? (
-              <div className="max-w-md text-center text-blue-200">
-                <p>Couldn&apos;t turn that one into stick figures.</p>
-                <button
-                  onClick={() => generateScenes(storyText)}
-                  className="mt-3 rounded-lg border border-white/20 px-4 py-1.5 text-sm text-blue-100 hover:bg-white/10"
-                >
-                  Try again
-                </button>
+              <div className="flex h-full items-center justify-center px-5">
+                <div className="max-w-md text-center text-blue-200">
+                  <p>Couldn&apos;t turn that one into stick figures.</p>
+                  <button
+                    onClick={() => generateScenes(storyText)}
+                    className="mt-3 rounded-lg border border-white/20 px-4 py-1.5 text-sm text-blue-100 hover:bg-white/10"
+                  >
+                    Try again
+                  </button>
+                </div>
               </div>
             ) : (
               <ScenePlayer scenes={scenes} />
@@ -521,9 +527,9 @@ export default function Page() {
             {storyText && (
               <button
                 onClick={() => setTab("learn")}
-                className="mt-2 rounded-lg border border-white/20 px-4 py-1.5 text-sm text-blue-100 hover:bg-white/10"
+                className="absolute left-4 top-4 rounded-full bg-black/50 px-3 py-1.5 text-sm text-white backdrop-blur hover:bg-black/70"
               >
-                ← Back to the story
+                ← Back
               </button>
             )}
           </div>

@@ -39,37 +39,35 @@ export function ScenePlayer({ scenes }: { scenes: SceneStep[] }) {
 
   if (!current) return null;
 
+  const progress = ((index + 1) / scenes.length) * 100;
+
   return (
-    <div className="flex w-full flex-col items-center gap-4">
-      <div className="flex h-56 w-full items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
-        <StickFigure pose={current.pose} x={x} />
+    <div className="relative h-full w-full overflow-hidden bg-black">
+      {/* Stage - the figure fills the screen */}
+      <div className="flex h-full w-full items-center justify-center">
+        <div className="scale-150 sm:scale-[2.2]">
+          <StickFigure pose={current.pose} x={x} />
+        </div>
       </div>
 
-      <p className="min-h-[1.5rem] max-w-md text-center text-blue-100">{current.caption}</p>
-
-      <div className="flex items-center gap-1.5">
-        {scenes.map((_, i) => (
-          <span key={i} className={`h-1.5 w-6 rounded-full ${i <= index ? "bg-purple-400" : "bg-white/15"}`} />
-        ))}
+      {/* Subtitle */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-20 flex justify-center px-6">
+        <p className="rounded-lg bg-black/60 px-4 py-2 text-center text-lg text-white sm:text-xl">{current.caption}</p>
       </div>
 
-      <div className="flex gap-2">
-        {atEnd ? (
-          <button
-            onClick={replay}
-            className="rounded-lg bg-purple-500 px-4 py-1.5 text-sm font-medium text-white hover:bg-purple-600"
-          >
-            Replay
-          </button>
-        ) : (
-          <button
-            onClick={() => setPlaying((p) => !p)}
-            className="rounded-lg border border-white/20 px-4 py-1.5 text-sm text-blue-100 hover:bg-white/10"
-          >
-            {playing ? "Pause" : "Play"}
-          </button>
-        )}
+      {/* Thin progress bar */}
+      <div className="absolute inset-x-0 bottom-0 h-1 bg-white/10">
+        <div className="h-full bg-purple-400 transition-all" style={{ width: `${progress}%` }} />
       </div>
+
+      {/* Play/pause/replay control */}
+      <button
+        onClick={atEnd ? replay : () => setPlaying((p) => !p)}
+        className="absolute bottom-6 right-6 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur hover:bg-white/20"
+        aria-label={atEnd ? "Replay" : playing ? "Pause" : "Play"}
+      >
+        {atEnd ? "↺" : playing ? "❙❙" : "▶"}
+      </button>
     </div>
   );
 }
