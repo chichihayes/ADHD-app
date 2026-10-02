@@ -144,3 +144,24 @@ ${labeled}
 
 Write the single best final story now.`;
 }
+
+export const SCENE_MODEL = "google/gemini-3.8-flash";
+
+export const STICK_POSES = ["stand", "point", "wave", "think", "sit", "jump", "cheer", "walk", "run"] as const;
+
+export function sceneSystemPrompt() {
+  return `You are turning a short story into a simple stick-figure video script.
+
+Rules:
+- Break the story into 5 to 8 short beats, in the same order the story happens
+- Each beat gets exactly one pose from this list, nothing else: ${STICK_POSES.join(", ")}
+- Each beat gets a short caption (under 12 words) describing what's happening in plain words, not a repeat of the story's sentence
+- Each beat gets a duration in seconds, a number between 2 and 5
+- Use "walk" or "run" when the character is going somewhere, "point" or "wave" when they're gesturing at something, "think" for a realization or confusion, "sit" for a calm or resting beat, "jump" or "cheer" for excitement or a win, "stand" only when nothing else fits
+- Respond with ONLY a JSON array, nothing else, no explanation, in exactly this shape:
+[{"pose": "stand", "caption": "short caption here", "seconds": 3}]`;
+}
+
+export function sceneUserPrompt(story: string) {
+  return `Turn this story into the stick-figure scene script:\n\n"""\n${story}\n"""`;
+}
