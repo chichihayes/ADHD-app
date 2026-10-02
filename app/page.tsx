@@ -14,7 +14,6 @@ import {
   nextStageSystemPrompt,
   nextStageUserPrompt,
 } from "@/src/lib/prompts";
-import { ScenePlayer, SceneStep } from "./ScenePlayer";
 
 type Entry = {
   role: "user" | "ai";
@@ -24,7 +23,6 @@ type Entry = {
   pending?: boolean;
   error?: boolean;
   streaming?: boolean;
-  readyForVideo?: boolean;
 };
 type HistoryMsg = { role: "user" | "assistant"; content: string };
 type Stage = "question" | "feedback" | "interest" | "questionPhase" | "answer";
@@ -105,28 +103,8 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const [loadingLabel, setLoadingLabel] = useState("Thinking…");
   const [input, setInput] = useState("");
-  const [storyText, setStoryText] = useState("");
-  const [sceneStatus, setSceneStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
-  const [scenes, setScenes] = useState<SceneStep[]>([]);
   const questionPhaseFired = useRef(false);
   const transcriptRef = useRef<HTMLDivElement>(null);
-
-  async function generateScenes(story: string) {
-    setSceneStatus("loading");
-    try {
-      const res = await fetch("/api/scene", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ story }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Scene request failed.");
-      setScenes(data.scenes as SceneStep[]);
-      setSceneStatus("ready");
-    } catch {
-      setSceneStatus("error");
-    }
-  }
 
   function pushHistory(userPrompt: string, aiResponse: string) {
     setHistory((h) => [...h, { role: "user", content: userPrompt }, { role: "assistant", content: aiResponse }]);
@@ -165,23 +143,35 @@ export default function Page() {
     const sys = storySystemPrompt(interestText, currentTopic);
     const prompt = storyUserPrompt(currentTopic, interestText);
 
-    const { text: aiStory, error } = await callStoryPanelStreaming(sys, prompt, currentTopic, interestText, () => {});
-
-    pushHistory(prompt, aiStory);
-    push({
-      role: "ai",
-      label: "In context",
-      text: error ? aiStory : "Your story is ready — watch it play out.",
-      special: true,
-      error,
-      readyForVideo: !error,
+    let storyIndex = -1;
+    const { text: aiStory, error } = await callStoryPanelStreaming(sys, prompt, currentTopic, interestText, (textSoFar) => {
+      if (storyIndex === -1) {
+        setLoading(false);
+        setEntries((e) => {
+          storyIndex = e.length;
+          return [...e, { role: "ai", label: "In context", text: textSoFar, special: true, streaming: true }];
+        });
+      } else {
+        setEntries((e) => {
+          const copy = [...e];
+          copy[storyIndex] = { ...copy[storyIndex], text: textSoFar };
+          return copy;
+        });
+      }
+      transcriptRef.current?.scrollTo({ top: transcriptRef.current.scrollHeight });
     });
 
-    if (!error) {
-      setStoryText(aiStory);
-      generateScenes(aiStory);
+    if (storyIndex === -1) {
+      push({ role: "ai", label: "In context", text: aiStory, special: true, error, streaming: true });
+    } else {
+      setEntries((e) => {
+        const copy = [...e];
+        copy[storyIndex] = { ...copy[storyIndex], text: aiStory, error };
+        return copy;
+      });
     }
 
+    pushHistory(prompt, aiStory);
     setLoading(false);
     setLoadingLabel("Thinking…");
     setStage("questionPhase");
@@ -412,14 +402,6 @@ export default function Page() {
                           ) : (
                             e.text
                           )}
-                          {e.readyForVideo && (
-                            <button
-                              onClick={() => setTab("visualize")}
-                              className="mt-3 rounded-lg bg-amber-400 px-4 py-1.5 text-sm font-medium text-slate-900 hover:bg-amber-300"
-                            >
-                              ▶ Watch it as stick figures
-                            </button>
-                          )}
                         </div>
                       ) : (
                         <div className="leading-relaxed text-slate-100">
@@ -490,48 +472,17 @@ export default function Page() {
           </div>
         )}
 
-        {/* ===================== VISUALIZE (full-screen stick-figure video) ===================== */}
+        {/* ===================== VISUALIZE (coming soon) ===================== */}
         {tab === "visualize" && (
-          <div className="relative h-full w-full">
-            {!storyText ? (
-              <div className="flex h-full items-center justify-center px-5">
-                <div className="relative max-w-md overflow-hidden rounded-2xl border border-dashed border-white/20 bg-white/[0.03] p-10 text-center">
-                  <p className="font-mono text-xs uppercase tracking-widest text-purple-300">Nothing yet</p>
-                  <h2 className="mt-2 text-2xl font-bold text-white">Visualize</h2>
-                  <p className="mt-2 text-blue-200">
-                    Go to Learn and personalize a topic with something you're into — your story
-                    shows up here as a stick-figure video.
-                  </p>
-                </div>
-              </div>
-            ) : sceneStatus === "loading" ? (
-              <div className="flex h-full items-center justify-center">
-                <p className="italic text-blue-300/70">Turning your story into stick figures…</p>
-              </div>
-            ) : sceneStatus === "error" ? (
-              <div className="flex h-full items-center justify-center px-5">
-                <div className="max-w-md text-center text-blue-200">
-                  <p>Couldn&apos;t turn that one into stick figures.</p>
-                  <button
-                    onClick={() => generateScenes(storyText)}
-                    className="mt-3 rounded-lg border border-white/20 px-4 py-1.5 text-sm text-blue-100 hover:bg-white/10"
-                  >
-                    Try again
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <ScenePlayer scenes={scenes} />
-            )}
-
-            {storyText && (
-              <button
-                onClick={() => setTab("learn")}
-                className="absolute left-4 top-4 rounded-full bg-black/50 px-3 py-1.5 text-sm text-white backdrop-blur hover:bg-black/70"
-              >
-                ← Back
-              </button>
-            )}
+          <div className="flex h-full items-center justify-center px-5">
+            <div className="relative max-w-md overflow-hidden rounded-2xl border border-dashed border-white/20 bg-white/[0.03] p-10 text-center">
+              <p className="font-mono text-xs uppercase tracking-widest text-purple-300">Coming soon</p>
+              <h2 className="mt-2 text-2xl font-bold text-white">Visualize</h2>
+              <p className="mt-2 text-blue-200">
+                A map of every concept, story, and question from your Learn sessions, laid out
+                visually instead of as a transcript. Not built yet — the Learn cycle comes first.
+              </p>
+            </div>
           </div>
         )}
       </main>
