@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { SCENE_MODEL, STICK_POSES, sceneSystemPrompt, sceneUserPrompt } from "@/src/lib/prompts";
+import { SCENE_MODEL, STICK_POSES, STICK_PROPS, sceneSystemPrompt, sceneUserPrompt } from "@/src/lib/prompts";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
-type RawScene = { pose?: string; caption?: string; seconds?: number };
+type RawScene = { pose?: string; props?: unknown; caption?: string; seconds?: number };
 
 export async function POST(req: NextRequest) {
   const apiKey = process.env.OPENROUTER_API_KEY;
@@ -62,10 +62,14 @@ export async function POST(req: NextRequest) {
 
     const parsed = JSON.parse(match[0]) as RawScene[];
     const allowedPoses = new Set<string>(STICK_POSES);
+    const allowedProps = new Set<string>(STICK_PROPS);
     const scenes = parsed
-      .filter((s): s is Required<RawScene> => !!s && typeof s.caption === "string" && allowedPoses.has(s.pose ?? ""))
+      .filter((s): s is RawScene & { pose: string; caption: string } =>
+        !!s && typeof s.caption === "string" && allowedPoses.has(s.pose ?? "")
+      )
       .map((s) => ({
         pose: s.pose,
+        props: Array.isArray(s.props) ? s.props.filter((p): p is string => typeof p === "string" && allowedProps.has(p)).slice(0, 3) : [],
         caption: s.caption.slice(0, 140),
         seconds: Math.min(6, Math.max(2, Number(s.seconds) || 3)),
       }))

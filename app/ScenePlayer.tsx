@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { PoseName, StickFigure } from "./StickFigure";
+import { PropName, SceneProps } from "./SceneProps";
 
-export type SceneStep = { pose: PoseName; caption: string; seconds: number };
+export type SceneStep = { pose: PoseName; props: PropName[]; caption: string; seconds: number };
 
 export function ScenePlayer({ scenes }: { scenes: SceneStep[] }) {
   const [index, setIndex] = useState(0);
@@ -43,12 +44,13 @@ export function ScenePlayer({ scenes }: { scenes: SceneStep[] }) {
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-black">
-      {/* Stage - the figure fills the screen */}
+      {/* Stage - the figure and this beat's elements fill the screen */}
       <div className="flex h-full w-full items-center justify-center">
         <div className="scale-150 sm:scale-[2.2]">
           <StickFigure pose={current.pose} x={x} />
         </div>
       </div>
+      <SceneProps props={current.props} />
 
       {/* Subtitle */}
       <div className="pointer-events-none absolute inset-x-0 bottom-20 flex justify-center px-6">
