@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { PoseName, StickFigure } from "./StickFigure";
 import { PropName, SceneProps } from "./SceneProps";
+import { MotionEffects } from "./MotionEffects";
 
 export type SceneStep = { pose: PoseName; props: PropName[]; caption: string; seconds: number };
 
@@ -51,6 +52,7 @@ export function ScenePlayer({ scenes }: { scenes: SceneStep[] }) {
         </div>
       </div>
       <SceneProps props={current.props} />
+      <MotionEffects key={index} pose={current.pose} />
 
       {/* Subtitle */}
       <div className="pointer-events-none absolute inset-x-0 bottom-20 flex justify-center px-6">

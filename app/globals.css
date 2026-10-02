@@ -8,3 +8,22 @@ body {
   min-height: 100vh;
   color: #f1f5f9;
 }
+
+@keyframes speedline {
+  0% { opacity: 0; transform: translateX(16px); }
+  40% { opacity: 0.9; }
+  100% { opacity: 0; transform: translateX(-26px); }
+}
+
+@keyframes impact-burst {
+  0% { opacity: 1; transform: scale(0.2); }
+  100% { opacity: 0; transform: scale(1.8); }
+}
+
+.animate-speedline {
+  animation: speedline 0.5s linear infinite;
+}
+
+.animate-impact {
+  animation: impact-burst 0.55s ease-out;
+}
