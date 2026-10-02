@@ -10,14 +10,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Server is missing OPENROUTER_API_KEY." }, { status: 500 });
   }
 
-  let body: { systemPrompt?: string; userPrompt?: string };
+  let body: { systemPrompt?: string; userPrompt?: string; model?: string };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
-  const { systemPrompt, userPrompt } = body;
+  const { systemPrompt, userPrompt, model } = body;
   if (!systemPrompt || !userPrompt) {
     return NextResponse.json({ error: "systemPrompt and userPrompt are required." }, { status: 400 });
   }
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
         "X-Title": "ADHD Learning Companion",
       },
       body: JSON.stringify({
-        model: STORY_MODEL,
+        model: model || STORY_MODEL,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
