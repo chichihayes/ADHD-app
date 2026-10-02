@@ -41,23 +41,17 @@ async function callAI(systemPrompt: string, userPrompt: string, history: History
   return { text: data.response as string, error: false };
 }
 
-async function callStoryPanelStreaming(
-  systemPrompt: string,
-  userPrompt: string,
-  currentTopic: string,
-  interestText: string,
-  onChunk: (textSoFar: string) => void
-) {
+async function callStoryStreaming(systemPrompt: string, userPrompt: string, onChunk: (textSoFar: string) => void) {
   const res = await fetch("/api/story", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ systemPrompt, userPrompt, currentTopic, interestText }),
+    body: JSON.stringify({ systemPrompt, userPrompt }),
   });
 
   if (!res.ok || !res.body) {
     const data = await res.json().catch(() => ({}));
     return {
-      text: `Oops! The writers couldn't get it together. Can you try again? 🤔 (Error: ${data.error || res.status})`,
+      text: `Oops! The storyteller didn't respond. Can you try again? 🤔 (Error: ${data.error || res.status})`,
       error: true,
     };
   }
@@ -139,12 +133,12 @@ export default function Page() {
     push({ role: "user", label: "Your interest", text: interestText });
     setChildInterest(interestText);
     setLoading(true);
-    setLoadingLabel("Four writers are drafting, then one is picking the best…");
+    setLoadingLabel("Writing your story…");
     const sys = storySystemPrompt(interestText, currentTopic);
     const prompt = storyUserPrompt(currentTopic, interestText);
 
     let storyIndex = -1;
-    const { text: aiStory, error } = await callStoryPanelStreaming(sys, prompt, currentTopic, interestText, (textSoFar) => {
+    const { text: aiStory, error } = await callStoryStreaming(sys, prompt, (textSoFar) => {
       if (storyIndex === -1) {
         setLoading(false);
         setEntries((e) => {

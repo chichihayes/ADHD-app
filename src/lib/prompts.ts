@@ -32,7 +32,7 @@ export function feedbackUserPrompt(feedbackText: string) {
 }
 
 export function storySystemPrompt(interestText: string, currentTopic: string) {
-  return `You are telling a small, simple story that happens to teach the concept - the kind of story that keeps someone reading because they want to know what happens next, not because they have to.
+  return `You are telling this story the way the great orators and preachers tell one - think of someone like Billy Graham holding a stadium's attention without ever raising his voice. That isn't volume. It's craft: rhythm, repetition, vivid pictures, and a story that is clearly going somewhere. That craft is a learnable skill, and you have it.
 
 Rules:
 - Create ONE coherent story from start to finish (6-8 sentences)
@@ -40,16 +40,20 @@ Rules:
 - Ground it in something real wherever you can - a real recent event or a real historical
   one connected to their interest - instead of a made-up generic scenario
 - The story must stay in the SAME CONTEXT throughout - don't jump between scenarios
-- Make it relatable and realistic, like something that could actually happen to them
-- Connect the concept clearly through the story, without stopping to lecture
-- Keep it simple and small - plain words, one clear moment leading into the next
+- Use the craft of a great storyteller, specifically:
+  - Vary sentence length on purpose - short, punchy lines next to longer flowing ones, for rhythm
+  - Use concrete, physical, sensory detail - what they see, hear, feel - instead of abstract description
+  - Build toward something - each line should raise the stakes or the question slightly, not just add information
+  - Speak with conviction, not hedging - no "maybe," "sort of," "in some ways"
+  - A touch of repetition or parallel phrasing is welcome if it adds weight, never to pad length
+- Connect the concept clearly through the story, without stopping to lecture - it should land IN the moment of highest attention, not get explained afterward
+- Keep the words plain and small even while the rhythm is deliberate - simple words, not simple delivery
 - Each sentence should leave the reader wanting to know what happens next, all the way
   to the last line - it needs to hold up to the very end, not just open strong
 - End on the moment that actually resolves the story, not a summary or a moral
-- No excessive excitement or emojis, no stiff or robotic phrasing
-- Every sentence should build on the previous one in the same setting
+- No emojis, no stiff or robotic phrasing, no academic tone
 
-Example: If they like cooking and the topic is heat transfer, tell a story about making soup from start to finish, showing heat transfer throughout that ONE cooking session. If they like football, ground it in an actual recent match or a well-known moment from football history instead of an invented game.
+Example: If they like cooking and the topic is heat transfer, tell a story about making soup from start to finish, showing heat transfer throughout that ONE cooking session, told with real rhythm and weight - not a flat description of someone cooking. If they like football, ground it in an actual recent match or a well-known moment from football history instead of an invented game.
 
 Current topic: ${currentTopic}`;
 }
@@ -114,33 +118,4 @@ export function nextStageUserPrompt(currentTopic: string, childInterest: string)
 }
 
 export const OPENROUTER_MODEL = "google/gemini-2.5-flash-lite";
-export const STORY_MODEL = "x-ai/grok-4.7";
-export const STORY_PANEL_MODELS = {
-  writers: ["x-ai/grok-4.7", "anthropic/claude-haiku-4.5", "openai/gpt-6.1-sol", "google/gemini-3.8-flash"],
-  master: "anthropic/claude-sonnet-5.5",
-};
-
-export function masterStorySystemPrompt(storyRules: string) {
-  return `Four different writers each independently wrote their own attempt at the same story. You are the one voice who picks what's best in each and writes the single final version - not a patchwork of their sentences, a real story in your own voice that happens to be informed by all four.
-
-The story has to follow these rules:
-${storyRules}
-
-Your job specifically:
-- Read all four attempts and notice what actually works in each - a strong opening, a real detail, a moment that lands, a clean connection to the concept
-- Throw out anything that reads stiff, robotic, generic, or like a lesson wearing a story costume
-- Write ONE final story in plain, human language - something a person would actually want to read to the last line because they're curious what happens, not because they have to
-- It must end on the moment that resolves the story, not a summary or a moral
-- Do not mention the four drafts, the writers, or that this was assembled from anything - just output the final story itself, nothing else`;
-}
-
-export function masterStoryUserPrompt(currentTopic: string, interestText: string, drafts: string[]) {
-  const labeled = drafts.map((d, i) => `Attempt ${i + 1}:\n"""\n${d}\n"""`).join("\n\n");
-  return `Topic: "${currentTopic}". Interest to build the story around: "${interestText}".
-
-Here are the four independent attempts:
-
-${labeled}
-
-Write the single best final story now.`;
-}
+export const STORY_MODEL = "anthropic/claude-opus-5.5";
