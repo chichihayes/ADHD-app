@@ -15,7 +15,15 @@ import {
   nextStageUserPrompt,
 } from "@/src/lib/prompts";
 
-type Entry = { role: "user" | "ai"; label: string; text: string; special?: boolean; pending?: boolean; error?: boolean };
+type Entry = {
+  role: "user" | "ai";
+  label: string;
+  text: string;
+  special?: boolean;
+  pending?: boolean;
+  error?: boolean;
+  streaming?: boolean;
+};
 type HistoryMsg = { role: "user" | "assistant"; content: string };
 type Stage = "question" | "feedback" | "interest" | "questionPhase" | "answer";
 type Tab = "about" | "learn" | "visualize";
@@ -33,17 +41,37 @@ async function callAI(systemPrompt: string, userPrompt: string, history: History
   return { text: data.response as string, error: false };
 }
 
-async function callStoryPanel(systemPrompt: string, userPrompt: string, currentTopic: string, interestText: string) {
+async function callStoryPanelStreaming(
+  systemPrompt: string,
+  userPrompt: string,
+  currentTopic: string,
+  interestText: string,
+  onChunk: (textSoFar: string) => void
+) {
   const res = await fetch("/api/story", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ systemPrompt, userPrompt, currentTopic, interestText }),
   });
-  const data = await res.json();
-  if (!res.ok) {
-    return { text: `Oops! The writers couldn't get it together. Can you try again? 🤔 (Error: ${data.error || res.status})`, error: true };
+
+  if (!res.ok || !res.body) {
+    const data = await res.json().catch(() => ({}));
+    return {
+      text: `Oops! The writers couldn't get it together. Can you try again? 🤔 (Error: ${data.error || res.status})`,
+      error: true,
+    };
   }
-  return { text: data.response as string, error: false };
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let full = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    full += decoder.decode(value, { stream: true });
+    onChunk(full);
+  }
+  return { text: full, error: false };
 }
 
 function TypedText({ text, onType }: { text: string; onType?: () => void }) {
@@ -114,9 +142,36 @@ export default function Page() {
     setLoadingLabel("Four writers are drafting, then one is picking the best…");
     const sys = storySystemPrompt(interestText, currentTopic);
     const prompt = storyUserPrompt(currentTopic, interestText);
-    const { text: aiStory } = await callStoryPanel(sys, prompt, currentTopic, interestText);
+
+    let storyIndex = -1;
+    const { text: aiStory, error } = await callStoryPanelStreaming(sys, prompt, currentTopic, interestText, (textSoFar) => {
+      if (storyIndex === -1) {
+        setLoading(false);
+        setEntries((e) => {
+          storyIndex = e.length;
+          return [...e, { role: "ai", label: "In context", text: textSoFar, special: true, streaming: true }];
+        });
+      } else {
+        setEntries((e) => {
+          const copy = [...e];
+          copy[storyIndex] = { ...copy[storyIndex], text: textSoFar };
+          return copy;
+        });
+      }
+      transcriptRef.current?.scrollTo({ top: transcriptRef.current.scrollHeight });
+    });
+
+    if (storyIndex === -1) {
+      push({ role: "ai", label: "In context", text: aiStory, special: true, error, streaming: true });
+    } else {
+      setEntries((e) => {
+        const copy = [...e];
+        copy[storyIndex] = { ...copy[storyIndex], text: aiStory, error };
+        return copy;
+      });
+    }
+
     pushHistory(prompt, aiStory);
-    push({ role: "ai", label: "In context", text: aiStory, special: true });
     setLoading(false);
     setLoadingLabel("Thinking…");
     setStage("questionPhase");
@@ -336,10 +391,14 @@ export default function Page() {
                       {e.special ? (
                         <div className="rounded-xl border-2 border-amber-400/60 bg-gradient-to-r from-amber-400/10 to-orange-400/10 p-4 leading-relaxed text-amber-100">
                           {e.role === "ai" ? (
-                            <TypedText
-                              text={e.text}
-                              onType={() => transcriptRef.current?.scrollTo({ top: transcriptRef.current.scrollHeight })}
-                            />
+                            e.streaming ? (
+                              e.text
+                            ) : (
+                              <TypedText
+                                text={e.text}
+                                onType={() => transcriptRef.current?.scrollTo({ top: transcriptRef.current.scrollHeight })}
+                              />
+                            )
                           ) : (
                             e.text
                           )}
@@ -347,10 +406,14 @@ export default function Page() {
                       ) : (
                         <div className="leading-relaxed text-slate-100">
                           {e.role === "ai" ? (
-                            <TypedText
-                              text={e.text}
-                              onType={() => transcriptRef.current?.scrollTo({ top: transcriptRef.current.scrollHeight })}
-                            />
+                            e.streaming ? (
+                              e.text
+                            ) : (
+                              <TypedText
+                                text={e.text}
+                                onType={() => transcriptRef.current?.scrollTo({ top: transcriptRef.current.scrollHeight })}
+                              />
+                            )
                           ) : (
                             e.text
                           )}
